@@ -1,33 +1,52 @@
-const LERP_FACTOR = 0.1;
+const LERP_FACTOR = 0.25;
+const INTRO_LERP = 0.03;
+const INTRO_DURATION = 1500;
 const MAX_ANGLE = 60;
 
+const loadTime = performance.now();
 const sections = [];
 
 document.querySelectorAll('.video-section').forEach((el) => {
   sections.push({
     el: el,
+    sticky: el.querySelector('.video-sticky'),
+    wrap: el.querySelector('.video-wrap'),
     container: el.querySelector('.video-container'),
+    fade: el.querySelector('.video-fade'),
     currentAngle: MAX_ANGLE,
   });
 });
 
 function getProgress(section) {
   const rect = section.el.getBoundingClientRect();
-  const sectionCenter = rect.top + rect.height / 2;
-  const viewportCenter = window.innerHeight / 2;
-  // progress: 0 = section center is at bottom of viewport, 1 = at top
-  const raw = 1 - (sectionCenter / window.innerHeight);
+  const raw = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
   return Math.max(0, Math.min(1, raw));
 }
 
 function animate() {
   for (const section of sections) {
     const progress = getProgress(section);
-    // 0 → +60deg (folded back), 0.5 → 0deg (frontal), 1 → -60deg (folded forward)
-    const targetAngle = MAX_ANGLE - progress * (MAX_ANGLE * 2);
-    section.currentAngle += (targetAngle - section.currentAngle) * LERP_FACTOR;
-    section.container.style.transform =
-      `perspective(1000px) rotateX(${section.currentAngle}deg)`;
+    const t = progress * 2 - 1;
+    const curved = t * t * t;
+    const targetAngle = -MAX_ANGLE * curved;
+    const elapsed = performance.now() - loadTime;
+    const introT = Math.min(elapsed / INTRO_DURATION, 1);
+    const lerp = INTRO_LERP + (LERP_FACTOR - INTRO_LERP) * introT;
+    section.currentAngle += (targetAngle - section.currentAngle) * lerp;
+    const tiltRatio = Math.abs(section.currentAngle) / MAX_ANGLE;
+    // 3D tilt + opacity
+    const tx = `perspective(1500px) rotateX(${section.currentAngle}deg)`;
+    const op = 1 - tiltRatio * 0.5;
+    if (section.wrap) {
+      section.wrap.style.transform = tx;
+      section.wrap.style.transformOrigin = 'center center';
+      section.container.style.opacity = op;
+    } else {
+      section.container.style.transform = tx;
+      section.container.style.opacity = op;
+    }
+    // gradient fade
+    section.fade.style.opacity = tiltRatio;
   }
   requestAnimationFrame(animate);
 }
