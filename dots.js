@@ -66,7 +66,7 @@
       if (dot.currentY < -20 || dot.currentY > canvas.height + 20) continue;
 
       const twinkle = 0.5 + 0.5 * Math.sin(time * dot.twinkleSpeed + dot.phase);
-      const alpha = 0.2 + twinkle * 0.5;
+      const alpha = 0.4 + twinkle * 0.6;
 
       ctx.beginPath();
       ctx.arc(dot.x, dot.currentY, dot.r, 0, Math.PI * 2);

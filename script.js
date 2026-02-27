@@ -52,3 +52,11 @@ function animate() {
 }
 
 requestAnimationFrame(animate);
+
+// Logo: show nav logo when hero logo scrolls out
+const heroLogo = document.querySelector('.logo-hero');
+const navLogo = document.querySelector('.logo-nav');
+
+new IntersectionObserver(([entry]) => {
+  navLogo.classList.toggle('visible', !entry.isIntersecting);
+}).observe(heroLogo);
